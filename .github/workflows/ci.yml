@@ -129,15 +129,12 @@ jobs:
         id: login
         with:
           user: ${{ secrets.NUGET_USER }}
-      - name: Push package
-        run: >
-          dotnet nuget push packages/*.nupkg
-          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
-          --source https://api.nuget.org/v3/index.json
-          --skip-duplicate
-      - name: Push symbols
-        run: >
-          dotnet nuget push packages/*.snupkg
-          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
-          --source https://api.nuget.org/v3/index.json
-          --skip-duplicate
+      - name: Push packages
+        run: |
+          shopt -s nullglob
+          for package in packages/*.nupkg packages/*.snupkg; do
+            dotnet nuget push "$package" \
+              --api-key "${{ steps.login.outputs.NUGET_API_KEY }}" \
+              --source https://api.nuget.org/v3/index.json \
+              --skip-duplicate
+          done
