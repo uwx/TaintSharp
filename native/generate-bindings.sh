@@ -12,6 +12,7 @@ dotnet tool run ClangSharpPInvokeGenerator -- \
   -f native/taint/include/taint.h \
   -I native/taint/include \
   -I native/clang-include \
+  -a=--target=x86_64-pc-windows-msvc \
   -n TaintSharp.Interop \
   -m TaintNative \
   -l taint \
