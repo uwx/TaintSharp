@@ -29,14 +29,12 @@ HOST_RIDS = {
     ("Windows", "AMD64"): "win-x64",
     ("Linux", "x86_64"): "linux-x64",
     ("Darwin", "arm64"): "osx-arm64",
-    ("Darwin", "x86_64"): "osx-x64",
 }
 
 LIBRARY_NAMES = {
     "win-x64": "taint.dll",
     "linux-x64": "libtaint.so",
     "osx-arm64": "libtaint.dylib",
-    "osx-x64": "libtaint.dylib",
 }
 
 

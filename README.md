@@ -4,7 +4,7 @@
 translates SPIR-V to WGSL. taint is a stripped-down, Meson-built packaging of Google's Tint.
 
 Native libraries for `win-x64`, `linux-x64`, and `osx-arm64` ship inside the NuGet package under
-`runtimes/<rid>/native/`. The managed assembly targets `net10.0`.
+`runtimes/<rid>/native/`. The managed assembly targets `net8.0` and `net10.0`.
 
 ## Install
 
@@ -50,6 +50,7 @@ if (wgsl is null)
 - taint's own documentation warns that Tint can crash the process on malformed SPIR-V. Only
   translate modules produced by a trusted compiler.
 - Only the three RIDs above are packaged. musl, `linux-arm64`, `win-arm64`, and `osx-x64` are not.
+- The Linux build targets glibc 2.34+ (it is produced on Ubuntu 22.04).
 - `TaintOptions` must not be used by more than one translation at a time.
 
 ## Building from source

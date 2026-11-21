@@ -43,7 +43,8 @@ jobs:
       fail-fast: false
       matrix:
         include:
-          - os: ubuntu-latest
+          # 22.04 keeps the glibc floor at 2.35 instead of 2.39.
+          - os: ubuntu-22.04
             rid: linux-x64
           - os: windows-latest
             rid: win-x64
@@ -61,7 +62,9 @@ jobs:
         run: python native/build.py --rid ${{ matrix.rid }}
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 10.0.x
+          dotnet-version: |
+            8.0.x
+            10.0.x
       - name: Test
         run: dotnet test tests/TaintSharp.Tests/TaintSharp.Tests.csproj -c Release
       - uses: actions/upload-artifact@v4
