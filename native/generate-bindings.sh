@@ -11,6 +11,7 @@ dotnet tool run ClangSharpPInvokeGenerator -- \
   -x c \
   -f native/taint/include/taint.h \
   -I native/taint/include \
+  -I native/clang-include \
   -n TaintSharp.Interop \
   -m TaintNative \
   -l taint \
