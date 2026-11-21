@@ -162,7 +162,12 @@ def main() -> int:
             "--native-file",
             str(write_native_file()),
             "-Dcpp_args=/Zc:preprocessor",
+            # Static CRT so the DLL does not require the Visual C++ redistributable.
+            "-Db_vscrt=mt",
         ]
+    elif sys.platform.startswith("linux"):
+        # Keep the shared library free of a libstdc++ version requirement.
+        setup += ["-Dcpp_link_args=-static-libstdc++,-static-libgcc"]
     if (build_dir / "build.ninja").exists():
         setup.append("--reconfigure")
 

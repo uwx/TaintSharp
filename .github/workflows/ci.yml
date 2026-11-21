@@ -3,6 +3,7 @@ name: CI
 on:
   push:
     branches: [master]
+    tags: ["v*"]
   pull_request:
   workflow_dispatch:
 
@@ -12,6 +13,10 @@ permissions:
 concurrency:
   group: ${{ github.workflow }}-${{ github.ref }}
   cancel-in-progress: true
+
+env:
+  # The tests and generator do not need ICU; this also keeps minimal containers working.
+  DOTNET_SYSTEM_GLOBALIZATION_INVARIANT: "1"
 
 jobs:
   bindings:
@@ -79,6 +84,11 @@ jobs:
           path: artifacts/native
       - name: Show native assets
         run: find artifacts/native -type f
+      - name: Verify all RIDs are present
+        run: |
+          test -f artifacts/native/win-x64/taint.dll
+          test -f artifacts/native/linux-x64/libtaint.so
+          test -f artifacts/native/osx-arm64/libtaint.dylib
       - name: Determine package version
         id: version
         shell: bash
