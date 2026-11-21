@@ -34,6 +34,13 @@ public sealed class TaintTests
     }
 
     [Fact]
+    public void RejectsShortInput()
+    {
+        Assert.Throws<ArgumentException>(() => Taint.Translate(Array.Empty<uint>()));
+        Assert.Throws<ArgumentException>(() => Taint.Translate(new byte[4]));
+    }
+
+    [Fact]
     public void MinifyReducesOutputSize()
     {
         using TaintOptions options = new();

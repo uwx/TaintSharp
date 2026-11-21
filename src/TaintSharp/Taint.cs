@@ -16,12 +16,18 @@ public static unsafe class Taint
     /// <param name="options">Options for this translation, or <see langword="null"/> for defaults.</param>
     /// <returns>A module object. Inspect <see cref="TaintModule.GetWgsl"/> and <see cref="TaintModule.GetDiagnostics"/> for the result.</returns>
     /// <exception cref="OutOfMemoryException">The native library could not allocate the result.</exception>
+    /// <exception cref="ArgumentException"><paramref name="spirv"/> is shorter than the 5-word SPIR-V header.</exception>
     /// <remarks>
     /// The native library is documented as potentially crashing the process on malformed input.
     /// Only pass SPIR-V produced by a trusted compiler.
     /// </remarks>
     public static TaintModule Translate(ReadOnlySpan<uint> spirv, TaintOptions? options = null)
     {
+        if (spirv.Length < 5)
+        {
+            throw new ArgumentException("SPIR-V must contain at least the 5-word module header.", nameof(spirv));
+        }
+
         fixed (uint* words = spirv)
         {
             NativeTaintModule* module = TaintNative.spirv_to_wgsl((nuint)spirv.Length, words, options?.Handle);
