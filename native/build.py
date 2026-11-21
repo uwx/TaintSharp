@@ -37,6 +37,14 @@ LIBRARY_NAMES = {
     "osx-arm64": "libtaint.dylib",
 }
 
+# Arch of each packaged RID. We build natively (Meson picks the host compiler), so a
+# mismatch would silently stage a library for the wrong architecture.
+RID_ARCHS = {
+    "win-x64": "x64",
+    "linux-x64": "x64",
+    "osx-arm64": "arm64",
+}
+
 
 def fail(message: str) -> "NoReturn":
     raise SystemExit(f"error: {message}")
@@ -108,7 +116,8 @@ def patch_spirv_tools_for_msvc() -> None:
         if "cpp_std=c++17" in text:
             return
         fail("SPIRV-Tools meson.build changed; update native/build.py")
-    path.write_text(text.replace("cpp_std=gnu++17", "cpp_std=c++17"), encoding="utf-8", newline="\n")
+    with open(path, "w", encoding="utf-8", newline="\n") as file:
+        file.write(text.replace("cpp_std=gnu++17", "cpp_std=c++17"))
 
 
 def write_native_file() -> Path:
@@ -149,6 +158,12 @@ def main() -> int:
     rid = args.rid or HOST_RIDS.get((platform.system(), platform.machine()))
     if rid is None:
         fail(f"unsupported host {platform.system()} {platform.machine()}; pass --rid explicitly")
+    host_arch = {"AMD64": "x64", "x86_64": "x64", "arm64": "arm64", "aarch64": "arm64"}.get(platform.machine())
+    if host_arch != RID_ARCHS[rid]:
+        fail(
+            f"{rid} must be built on {RID_ARCHS[rid]}, but this host is "
+            f"{platform.system()} {platform.machine()}; Meson builds for the host"
+        )
     library_name = LIBRARY_NAMES[rid]
     build_dir = BUILD_ROOT / rid
 

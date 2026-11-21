@@ -55,7 +55,7 @@ if (wgsl is null)
 
 ## Building from source
 
-Requirements: Git, Python 3.9+, .NET SDK 10+, a C++20 toolchain (MSVC 2022+ on Windows),
+Requirements: Git, Python 3.10+, .NET SDK 10+, a C++20 toolchain (MSVC 2022+ on Windows),
 Meson, and Ninja.
 
 ```bash
@@ -69,7 +69,8 @@ dotnet test tests/TaintSharp.Tests/TaintSharp.Tests.csproj -c Release
 `native/build.py` checks out the pinned taint revision into `native/taint` (the revision is recorded
 in the script) and lets Meson download the `SPIRV-Tools` and `SPIRV-Headers` wrap subprojects.
 On Windows it activates the Visual Studio environment and builds with MSVC; the built library is
-staged in `artifacts/native/<rid>/`.
+staged in `artifacts/native/<rid>/`. Each RID must be built on a host of the same architecture,
+because Meson uses the host toolchain: `osx-arm64` needs an Apple Silicon Mac.
 
 ## Regenerating the P/Invoke bindings
 
