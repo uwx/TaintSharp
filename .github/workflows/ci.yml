@@ -31,7 +31,7 @@ jobs:
         run: python native/build.py --fetch-only
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - name: Regenerate bindings
         run: bash native/generate-bindings.sh
       - name: Check for drift
@@ -61,7 +61,7 @@ jobs:
         run: python native/build.py --rid ${{ matrix.rid }}
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - name: Test
         run: dotnet test tests/TaintSharp.Tests/TaintSharp.Tests.csproj -c Release
       - uses: actions/upload-artifact@v4
@@ -78,7 +78,7 @@ jobs:
       - uses: actions/checkout@v4
       - uses: actions/setup-dotnet@v4
         with:
-          dotnet-version: 8.0.x
+          dotnet-version: 10.0.x
       - uses: actions/download-artifact@v4
         with:
           path: artifacts/native

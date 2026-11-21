@@ -124,6 +124,19 @@ def write_native_file() -> Path:
     return path
 
 
+def write_linux_native_file() -> Path:
+    # A Meson array option cannot carry these through -D (the comma is taken
+    # literally), so set them in a native file instead.
+    path = BUILD_ROOT / "linux.ini"
+    path.parent.mkdir(parents=True, exist_ok=True)
+    path.write_text(
+        "[built-in options]\n"
+        "cpp_link_args = ['-static-libstdc++', '-static-libgcc']\n",
+        encoding="utf-8",
+    )
+    return path
+
+
 def main() -> int:
     parser = argparse.ArgumentParser(description=__doc__)
     parser.add_argument("--rid", choices=sorted(LIBRARY_NAMES), help="NuGet runtime identifier (default: host)")
@@ -166,10 +179,13 @@ def main() -> int:
             "-Db_vscrt=mt",
         ]
     elif sys.platform.startswith("linux"):
-        # Keep the shared library free of a libstdc++ version requirement.
-        setup += ["-Dcpp_link_args=-static-libstdc++,-static-libgcc"]
+        # Keep the shared library free of a libstdc++/libgcc version requirement.
+        setup += ["--native-file", str(write_linux_native_file())]
     if (build_dir / "build.ninja").exists():
         setup.append("--reconfigure")
+    elif (build_dir / "meson-private").exists():
+        # A previous setup failed before writing build.ninja; start over.
+        shutil.rmtree(build_dir, ignore_errors=True)
 
     subprocess.run(setup, check=True, env=env)
     subprocess.run(

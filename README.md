@@ -4,7 +4,7 @@
 translates SPIR-V to WGSL. taint is a stripped-down, Meson-built packaging of Google's Tint.
 
 Native libraries for `win-x64`, `linux-x64`, and `osx-arm64` ship inside the NuGet package under
-`runtimes/<rid>/native/`. The managed assembly targets `net8.0`.
+`runtimes/<rid>/native/`. The managed assembly targets `net10.0`.
 
 ## Install
 
@@ -54,7 +54,7 @@ if (wgsl is null)
 
 ## Building from source
 
-Requirements: Git, Python 3.9+, .NET SDK 8+, a C++20 toolchain (MSVC 2022+ on Windows),
+Requirements: Git, Python 3.9+, .NET SDK 10+, a C++20 toolchain (MSVC 2022+ on Windows),
 Meson, and Ninja.
 
 ```bash

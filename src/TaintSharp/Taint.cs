@@ -30,7 +30,8 @@ public static unsafe class Taint
 
         fixed (uint* words = spirv)
         {
-            NativeTaintModule* module = TaintNative.spirv_to_wgsl((nuint)spirv.Length, words, options?.Handle);
+            NativeTaintOptions* nativeOptions = options is null ? null : options.Handle;
+            NativeTaintModule* module = TaintNative.spirv_to_wgsl((nuint)spirv.Length, words, nativeOptions);
             if (module == null)
             {
                 throw new OutOfMemoryException("The native taint library failed to allocate a TaintModule.");

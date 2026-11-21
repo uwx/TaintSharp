@@ -115,8 +115,8 @@ public sealed unsafe class TaintOptions : IDisposable
 
     private bool SetWgslName(string name, bool isExtension)
     {
-        NativeTaintOptions* handle = Handle;
         ArgumentNullException.ThrowIfNull(name);
+        NativeTaintOptions* handle = Handle;
 
         int byteCount = Encoding.UTF8.GetByteCount(name);
         byte[] buffer = ArrayPool<byte>.Shared.Rent(byteCount + 1);
