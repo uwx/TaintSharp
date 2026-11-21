@@ -1,0 +1,16 @@
+# Build outputs
+artifacts/
+**/bin/
+**/obj/
+.vs/
+
+# Cloned taint sources and native build tree
+native/taint/
+native/build/
+
+# Local scratch
+.tools/
+*.user
+
+# Python bytecode
+native/__pycache__/

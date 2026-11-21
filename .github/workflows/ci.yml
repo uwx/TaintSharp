@@ -1,0 +1,133 @@
+name: CI
+
+on:
+  push:
+    branches: [master]
+  pull_request:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency:
+  group: ${{ github.workflow }}-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  bindings:
+    name: Generated bindings
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Fetch pinned taint sources
+        run: python native/build.py --fetch-only
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Regenerate bindings
+        run: bash native/generate-bindings.sh
+      - name: Check for drift
+        run: git diff --exit-code -- src/TaintSharp/Interop/taint.g.cs
+
+  native:
+    name: Native ${{ matrix.rid }}
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: ubuntu-latest
+            rid: linux-x64
+          - os: windows-latest
+            rid: win-x64
+          - os: macos-14
+            rid: osx-arm64
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install Meson and Ninja
+        run: python -m pip install meson==1.12.1 ninja
+      - name: Build native library
+        run: python native/build.py --rid ${{ matrix.rid }}
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - name: Test
+        run: dotnet test tests/TaintSharp.Tests/TaintSharp.Tests.csproj -c Release
+      - uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.rid }}
+          path: artifacts/native/${{ matrix.rid }}
+          if-no-files-found: error
+
+  pack:
+    name: Pack
+    needs: native
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: 8.0.x
+      - uses: actions/download-artifact@v4
+        with:
+          path: artifacts/native
+      - name: Show native assets
+        run: find artifacts/native -type f
+      - name: Determine package version
+        id: version
+        shell: bash
+        run: |
+          if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            echo "value=${GITHUB_REF_NAME#v}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=0.1.0-ci.${GITHUB_RUN_NUMBER}" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Pack
+        run: >
+          dotnet pack src/TaintSharp/TaintSharp.csproj -c Release
+          -p:Version=${{ steps.version.outputs.value }}
+          -o artifacts/packages
+      - name: Inspect package
+        run: unzip -l artifacts/packages/*.nupkg
+      - uses: actions/upload-artifact@v4
+        with:
+          name: packages
+          path: artifacts/packages
+
+  publish:
+    name: Publish to nuget.org
+    if: startsWith(github.ref, 'refs/tags/v')
+    needs: pack
+    runs-on: ubuntu-latest
+    environment: release
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/download-artifact@v4
+        with:
+          name: packages
+          path: packages
+      - name: NuGet login (OIDC to temporary API key)
+        uses: NuGet/login@v1
+        id: login
+        with:
+          user: ${{ secrets.NUGET_USER }}
+      - name: Push package
+        run: >
+          dotnet nuget push packages/*.nupkg
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
+      - name: Push symbols
+        run: >
+          dotnet nuget push packages/*.snupkg
+          --api-key "${{ steps.login.outputs.NUGET_API_KEY }}"
+          --source https://api.nuget.org/v3/index.json
+          --skip-duplicate
